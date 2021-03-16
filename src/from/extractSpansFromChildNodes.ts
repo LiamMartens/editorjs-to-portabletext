@@ -6,17 +6,20 @@ export const extractSpansFromChildNodes = (
   nodes: ChildNode[],
   config: MarkConfig,
 ) => {
+  console.log(nodes[0].nodeType, nodes[0].nodeName)
   let spans: Span[] = [];
   let definitions: MarkDefinition[] = [];
   for (const node of nodes) {
-    if (node.nodeType === Node.TEXT_NODE) {
+    if (node.nodeType === 3) {
+      // TEXT_NODE
       spans.push({
         _key: shortid(),
         _type: 'span',
         text: node.textContent,
         marks: [],
       });
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
+    } else if (node.nodeType === 1) {
+      // ELEMENT_NODE
       let subtree = extractSpansFromChildNodes(Array.from(node.childNodes), config);
       const nodeName = node.nodeName.toLowerCase();
       if (nodeName in config) {

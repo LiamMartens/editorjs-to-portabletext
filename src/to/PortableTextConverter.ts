@@ -1,19 +1,20 @@
 import { spansToHtml } from './spansToHtml';
 import type { Block, MarkDefinition, Span } from '@sanity/types';
 import type { EditorJsBlock, GenericMarkDefinition, PortableText } from '../types';
+import { wrapInHtml } from '../utils';
 
 export type MarkConfig = Record<string, (content: string) => string>;
 export type MarkDefConfig = Record<string, (content: string, def: GenericMarkDefinition) => string>;
 export type ConverterConfig = Record<string, (block: PortableText[0], markConfig: MarkConfig, markDefConfig: MarkDefConfig) => (EditorJsBlock | EditorJsBlock[])>;
 
 export const InitialMarkConfig: MarkConfig = {
-  strong: (content: string) => `<b>${content}</b>`,
-  em: (content: string) => `<i>${content}</i>`,
+  strong: (content: string) => wrapInHtml('b', null, content),
+  em: (content: string) => wrapInHtml('i', null, content),
 };
 
 export const InitialMarkDefConfig: MarkDefConfig = {
   link: (content: string, def: GenericMarkDefinition<{ href: string }>) => (
-    `<a href="${JSON.stringify(def.href)}">${content}</a>`
+    wrapInHtml('a', { href: def.href }, content)
   )
 };
 
