@@ -1,6 +1,8 @@
 import shortid from 'shortid';
+import { DOMParser } from 'xmldom';
 import { extractSpansFromChildNodes } from './extractSpansFromChildNodes';
 import type { EditorJsBlock, GenericMarkDefinition, PortableText } from '../types';
+import { wrapInHtml } from '../utils';
 
 export type MarkFactory = (node: ChildNode) => Omit<GenericMarkDefinition, '_key'>;
 export type MarkConfig = Record<string, string | MarkFactory>;
@@ -14,7 +16,7 @@ export const InitialMarkConfig: MarkConfig = {
 
 export const InitialConverterConfig: ConverterConfig = {
   paragraph: (block: EditorJsBlock<{ text: string }>, markConfig: MarkConfig) => {
-    const nodes = Array.from((new DOMParser()).parseFromString(block.data.text, 'text/html').body.childNodes);
+    const nodes = Array.from((new DOMParser()).parseFromString(wrapInHtml('html', null, block.data.text), 'text/html').documentElement.childNodes);
     const { spans, definitions } = extractSpansFromChildNodes(nodes, markConfig);
     return {
       _key: shortid(),
@@ -25,7 +27,7 @@ export const InitialConverterConfig: ConverterConfig = {
     };
   },
   header: (block: EditorJsBlock<{ text: string; level: number; }>, markConfig: MarkConfig) => {
-    const nodes = Array.from((new DOMParser()).parseFromString(block.data.text, 'text/html').body.childNodes);
+    const nodes = Array.from((new DOMParser()).parseFromString(wrapInHtml('html', null, block.data.text), 'text/html').documentElement.childNodes);
     const { spans, definitions } = extractSpansFromChildNodes(nodes, markConfig);
     return {
       _key: shortid(),
