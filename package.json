@@ -8,6 +8,10 @@
     "name": "Liam Martens",
     "email": "hi@liammartens.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LiamMartens/editorjs-to-portabletext"
+  },
   "files": [
     "lib"
   ],
