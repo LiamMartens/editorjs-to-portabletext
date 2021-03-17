@@ -1,11 +1,11 @@
 import { spansToHtml } from './spansToHtml';
-import type { Block, MarkDefinition, Span } from '@sanity/types';
-import type { EditorJsBlock, GenericMarkDefinition, PortableText } from '../types';
 import { wrapInHtml } from '../utils';
+import type { EditorJsBlock, GenericMarkDefinition, PortableText } from '../types';
 
 export type MarkConfig = Record<string, (content: string) => string>;
 export type MarkDefConfig = Record<string, (content: string, def: GenericMarkDefinition) => string>;
 export type ConverterConfig = Record<string, (block: PortableText[0], markConfig: MarkConfig, markDefConfig: MarkDefConfig) => (EditorJsBlock | EditorJsBlock[])>;
+export type TransformerConfig = Record<string, (input: EditorJsBlock[]) => EditorJsBlock[]>;
 
 export const InitialMarkConfig: MarkConfig = {
   strong: (content: string) => wrapInHtml('b', null, content),
@@ -20,7 +20,23 @@ export const InitialMarkDefConfig: MarkDefConfig = {
 
 export const InitialConverterConfig: ConverterConfig = {
   block: (block: PortableText[0], markConfig: MarkConfig, markDefConfig: MarkDefConfig) => {
-    if (block.style === 'normal') {
+    if ('listItem' in block && block.listItem === 'number') {
+      return {
+        type: 'list',
+        data: {
+          style: 'ordered',
+          items: spansToHtml(block.children, block.markDefs, markConfig, markDefConfig)
+        }
+      }
+    } else if ('listItem' in block && block.listItem === 'bullet') {
+      return {
+        type: 'list',
+        data: {
+          style: 'unordered',
+          items: spansToHtml(block.children, block.markDefs, markConfig, markDefConfig)
+        }
+      }
+    } else if (block.style === 'normal') {
       return {
         type: 'paragraph',
         data: {
@@ -41,15 +57,36 @@ export const InitialConverterConfig: ConverterConfig = {
   }
 };
 
+export const InitialTransformerConfig: TransformerConfig = {
+  list: (input) => {
+    for (let i = 1; i < input.length; i++) {
+      const node = input[i];
+      const prev = input[i - 1];
+      if (
+        node.type === 'list'
+        && prev.type === 'list'
+        && node.data.style === prev.data.style
+      ) {
+        prev.data.items = prev.data.items.concat(node.data.items);
+        input.splice(i, 1);
+        i--;
+      }
+    }
+    return input;
+  }
+}
+
 export class PortableTextConverter {
   private _markConfig: MarkConfig;
   private _markDefConfig: MarkDefConfig;
   private _converterConfig: ConverterConfig;
+  private _transformerConfig: TransformerConfig;
 
-  constructor(markConfig: MarkConfig = {}, markDefConfig: MarkDefConfig = {}, converterConfig: ConverterConfig = {}) {
+  constructor(markConfig: MarkConfig = {}, markDefConfig: MarkDefConfig = {}, converterConfig: ConverterConfig = {}, transformerConfig: TransformerConfig = {}) {
     this._markConfig = { ...InitialMarkConfig, ...markConfig };
     this._markDefConfig = { ...InitialMarkDefConfig, ...markDefConfig };
     this._converterConfig = { ...InitialConverterConfig, ...converterConfig };
+    this._transformerConfig = { ...InitialTransformerConfig, ...transformerConfig };
   }
 
   public convert = (data: PortableText): EditorJsBlock[] => {
@@ -63,6 +100,9 @@ export class PortableTextConverter {
       const result = this._converterConfig[b._type](b, this._markConfig, this._markDefConfig);
       if (Array.isArray(result)) blocks = blocks.concat(result);
       else blocks.push(result);
+    }
+    for (const k in this._transformerConfig) {
+      blocks = this._transformerConfig[k](blocks);
     }
     return blocks;
   }

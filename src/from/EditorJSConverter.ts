@@ -7,6 +7,7 @@ import type { EditorJsBlock, GenericMarkDefinition, PortableText } from '../type
 export type MarkFactory = (node: ChildNode) => Omit<GenericMarkDefinition, '_key'>;
 export type MarkConfig = Record<string, string | MarkFactory>;
 export type ConverterConfig = Record<string, (block: EditorJsBlock, markConfig: MarkConfig) => (PortableText | PortableText[0])>;
+export type TransformerConfig = Record<string, (input: PortableText) => PortableText>;
 
 export const InitialMarkConfig: MarkConfig = {
   i: 'em',
@@ -36,16 +37,36 @@ export const InitialConverterConfig: ConverterConfig = {
       children: spans,
       markDefs: definitions,
     };
-  }
+  },
+  list: (block: EditorJsBlock<{ items: string[]; style: 'ordered' | 'unordered' }>, markConfig: MarkConfig) => {
+    const listStyle = block.data.style === 'ordered' ? 'number' : 'bullet';
+    return block.data.items.map(listItem => {
+      const nodes = Array.from((new DOMParser()).parseFromString(wrapInHtml('html', null, listItem), 'text/html').documentElement.childNodes);
+      const { spans, definitions } = extractSpansFromChildNodes(nodes, markConfig);
+      return {
+        _key: nanoid(),
+        _type: 'block',
+        style: 'normal',
+        listItem: listStyle,
+        level: 1,
+        children: spans,
+        markDefs: definitions,
+      };
+    });
+  },
 };
+
+export const InitialTransformerConfig: TransformerConfig = {};
 
 export class EditorJSConverter {
   private _markConfig: MarkConfig;
   private _converterConfig: ConverterConfig;
+  private _transformerConfig: TransformerConfig;
 
-  constructor(markConfig: MarkConfig = {}, converterConfig: ConverterConfig = {}) {
+  constructor(markConfig: MarkConfig = {}, converterConfig: ConverterConfig = {}, transformerConfig: TransformerConfig = {}) {
     this._markConfig = { ...InitialMarkConfig, ...markConfig };
     this._converterConfig = { ...InitialConverterConfig, ...converterConfig };
+    this._transformerConfig = { ...InitialTransformerConfig, ...transformerConfig };
   }
 
   public convert = (data: EditorJsBlock[]): PortableText => {
@@ -59,6 +80,9 @@ export class EditorJSConverter {
       const result = this._converterConfig[b.type](b, this._markConfig);
       if (Array.isArray(result)) blocks = blocks.concat(result);
       else blocks.push(result);
+    }
+    for (const k in this._transformerConfig) {
+      blocks = this._transformerConfig[k](blocks);
     }
     return blocks;
   }

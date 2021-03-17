@@ -14,5 +14,6 @@ export const spansToHtml = (
       if (m in markConfig) { content = markConfig[m](content); }
       else if (m in markDefs && markDefs[m]._type in markDefConfig) { content = markDefConfig[markDefs[m]._type](content, markDefs[m]); }
     }
+    return content;
   });
 }
