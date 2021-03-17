@@ -1,6 +1,6 @@
 {
   "name": "editorjs-to-portabletext",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "license": "MIT",
@@ -30,7 +30,6 @@
     "@rollup/plugin-commonjs": "^17.1.0",
     "@rollup/plugin-node-resolve": "^11.2.0",
     "@sanity/types": "^2.6.0",
-    "@types/shortid": "^0.0.29",
     "@types/xmldom": "^0.1.30",
     "rollup": "^2.41.4",
     "rollup-plugin-typescript2": "^0.30.0",
@@ -38,7 +37,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.13.10",
-    "shortid": "^2.2.16",
+    "nanoid": "^3.1.22",
     "xmldom": "^0.5.0"
   }
 }

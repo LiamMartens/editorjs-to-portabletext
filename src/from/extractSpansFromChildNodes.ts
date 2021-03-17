@@ -1,4 +1,4 @@
-import shortid from 'shortid';
+import { nanoid } from 'nanoid';
 import type { MarkConfig } from './EditorJSConverter';
 import type { MarkDefinition, Span } from '@sanity/types';
 
@@ -13,7 +13,7 @@ export const extractSpansFromChildNodes = (
     if (node.nodeType === 3) {
       // TEXT_NODE
       spans.push({
-        _key: shortid(),
+        _key: nanoid(),
         _type: 'span',
         text: node.textContent,
         marks: [],
@@ -27,7 +27,7 @@ export const extractSpansFromChildNodes = (
         if (typeof markFactory === 'string') {
           for (const c of subtree.spans) { c.marks.push(markFactory); }
         } else {
-          const def = { ...markFactory(node), _key: shortid() } as MarkDefinition;
+          const def = { ...markFactory(node), _key: nanoid() } as MarkDefinition;
           subtree.definitions.push(def);
           for (const c of subtree.spans) { c.marks.push(def._key); }
         }

@@ -1,8 +1,8 @@
-import shortid from 'shortid';
+import { nanoid } from 'nanoid';
 import { DOMParser } from 'xmldom';
 import { extractSpansFromChildNodes } from './extractSpansFromChildNodes';
-import type { EditorJsBlock, GenericMarkDefinition, PortableText } from '../types';
 import { wrapInHtml } from '../utils';
+import type { EditorJsBlock, GenericMarkDefinition, PortableText } from '../types';
 
 export type MarkFactory = (node: ChildNode) => Omit<GenericMarkDefinition, '_key'>;
 export type MarkConfig = Record<string, string | MarkFactory>;
@@ -19,7 +19,7 @@ export const InitialConverterConfig: ConverterConfig = {
     const nodes = Array.from((new DOMParser()).parseFromString(wrapInHtml('html', null, block.data.text), 'text/html').documentElement.childNodes);
     const { spans, definitions } = extractSpansFromChildNodes(nodes, markConfig);
     return {
-      _key: shortid(),
+      _key: nanoid(),
       _type: 'block',
       style: 'normal',
       children: spans,
@@ -30,7 +30,7 @@ export const InitialConverterConfig: ConverterConfig = {
     const nodes = Array.from((new DOMParser()).parseFromString(wrapInHtml('html', null, block.data.text), 'text/html').documentElement.childNodes);
     const { spans, definitions } = extractSpansFromChildNodes(nodes, markConfig);
     return {
-      _key: shortid(),
+      _key: nanoid(),
       _type: 'block',
       style: `h${block.data.level}`,
       children: spans,
