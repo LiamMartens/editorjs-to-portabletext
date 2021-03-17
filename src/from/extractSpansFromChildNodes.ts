@@ -6,7 +6,6 @@ export const extractSpansFromChildNodes = (
   nodes: ChildNode[],
   config: MarkConfig,
 ) => {
-  console.log(nodes[0].nodeType, nodes[0].nodeName)
   let spans: Span[] = [];
   let definitions: MarkDefinition[] = [];
   for (const node of nodes) {
